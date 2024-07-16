@@ -1,0 +1,507 @@
+openapi: 3.0.3
+info:
+  title: Fukubox API
+  description: API for Digital Closet Application
+  version: "1.0"
+tags:
+  - name: Authentication
+    description: User authentication
+  - name: Clothes
+    description: Operations for clothes
+  - name: Categories
+    description: Operations for categories
+  - name: Tags
+    description: Operations for tags
+paths:
+  /clothes:
+    get:
+      security:
+        - bearerAuth: []
+      description: Get all clothing items
+      tags:
+        - Clothes
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+        - in: query
+          name: categoryId
+          schema:
+            type: integer
+          required: false
+          description: The ID of the category
+        - in: query
+          name: tagId
+          schema:
+            type: integer
+          required: false
+          description: The ID of the tag
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClothingItem"
+    post:
+      security:
+        - bearerAuth: []
+      description: Create a new clothing item
+      tags:
+        - Clothes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClothingItemInput"
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClothingItem"
+
+  /clothes/{id}:
+    get:
+      security:
+        - bearerAuth: []
+      description: Get a clothing item by ID
+      tags:
+        - Clothes
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: The ID of the clothing item
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClothingItem"
+    put:
+      security:
+        - bearerAuth: []
+      description: Update a clothing item by ID
+      tags:
+        - Clothes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClothingItemInput"
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: The ID of the clothing item
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClothingItem"
+    delete:
+      security:
+        - bearerAuth: []
+      description: Delete a clothing item by ID
+      tags:
+        - Clothes
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: The ID of the clothing item
+      responses:
+        "204":
+          description: No Content
+
+  /categories:
+    get:
+      security:
+        - bearerAuth: []
+      description: Get all categories
+      tags:
+        - Categories
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+
+    post:
+      security:
+        - bearerAuth: []
+      description: Create a new category
+      tags:
+        - Categories
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+
+  /categories/{id}:
+    get:
+      security:
+        - bearerAuth: []
+      description: Get a category by ID
+      tags:
+        - Categories
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: The ID of the category
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+    put:
+      security:
+        - bearerAuth: []
+      description: Update a category's name
+      tags:
+        - Categories
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: The ID of the category
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+    delete:
+      security:
+        - bearerAuth: []
+      description: Delete a category by ID
+      tags:
+        - Categories
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: The ID of the category
+      responses:
+        "204":
+          description: No Content
+
+  /tags:
+    get:
+      security:
+        - bearerAuth: []
+      description: Get all tags
+      tags:
+        - Tags
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tag"
+
+    post:
+      security:
+        - bearerAuth: []
+      description: Create a new tag
+      tags:
+        - Tags
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+
+  /tags/{id}:
+    get:
+      security:
+        - bearerAuth: []
+      description: Get a tag by ID
+      tags:
+        - Tags
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: The ID of the tag
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+    put:
+      security:
+        - bearerAuth: []
+      description: Update a tag's name
+      tags:
+        - Tags
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: The ID of the tag
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+    delete:
+      security:
+        - bearerAuth: []
+      description: Delete a tag by ID
+      tags:
+        - Tags
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: The ID of the tag
+      responses:
+        "204":
+          description: No Content
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ClothingItemInput:
+      type: object
+      required:
+        - url
+        - categoryId
+      properties:
+        url:
+          type: string
+          description: URL of the clothing item image
+        categoryId:
+          type: integer
+          description: Category ID associated with the clothing item
+        tags:
+          type: array
+          items:
+            type: integer
+          description: Optional array of tag IDs associated with the clothing item
+    ClothingItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        category_id:
+          type: integer
+        image_url:
+          type: string
+          format: uri
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
