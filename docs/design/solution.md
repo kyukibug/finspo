@@ -90,7 +90,7 @@ The following bullets outline the structure of the database:
 
 
 ## Testing Strategy
-- **Unit Testing**: Focus on backend logic using pytest.
+- **Unit Testing**: Focus on backend logic using Golang testing framework.
 - **Integration Testing**: Ensure all components work together as expected.
 - **UI Testing**: Automated testing of the frontend with tools like Selenium.
 
