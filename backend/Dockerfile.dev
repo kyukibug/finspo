@@ -2,12 +2,17 @@ FROM golang:1.22 AS src
 
 WORKDIR /api
 
+# Install air for hot reloading
+RUN go install github.com/air-verse/air@latest
+
 # Copy dependencies first to take advantage of Docker caching
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . ./
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /fukubox-api
-CMD ["/fukubox-api"]
+# RUN CGO_ENABLED=0 GOOS=linux go build -o /fukubox-api
+# CMD ["/fukubox-api"]
+
+CMD ["air"]
 EXPOSE 3000
