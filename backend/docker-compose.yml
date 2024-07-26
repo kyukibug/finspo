@@ -19,7 +19,9 @@ services:
       - ./:/api
 
   db:
-    image: postgres:14.1-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.dev.db
     restart: always
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
@@ -30,6 +32,7 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
     command: -p ${DB_PORT}
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin4_container
