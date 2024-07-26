@@ -12,11 +12,11 @@ import (
 )
 
 type Category struct {
-	id         int    `json:"id"`
-	user_id    int    `json:"user_id"`
-	name       string `json:"name"`
-	created_at string `json:"created_at"`
-	updated_at string `json:"updated_at"`
+	Id        int    `json:"id"`
+	UserId    int    `json:"user_id"`
+	Name      string `json:"name"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 func GetCategories(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +46,7 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var category Category
-		if err := rows.Scan(&category.id, &category.user_id, &category.name, &category.created_at, &category.updated_at); err != nil {
+		if err := rows.Scan(&category.Id, &category.UserId, &category.Name, &category.CreatedAt, &category.UpdatedAt); err != nil {
 			http.Error(w, "Failed to scan row", http.StatusInternalServerError)
 			return
 		}
