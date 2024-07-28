@@ -1,0 +1,19 @@
+meta {
+  name: Create Category
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{BASE_URL}}/categories
+  body: json
+  auth: none
+}
+
+headers {
+  userId: 1
+}
+
+body:json {
+  {"name": "test1"}
+}

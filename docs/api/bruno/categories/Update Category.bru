@@ -1,0 +1,19 @@
+meta {
+  name: Update Category
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{BASE_URL}}/categories/6
+  body: json
+  auth: none
+}
+
+headers {
+  userId: 1
+}
+
+body:json {
+  {"name": "bear"}
+}
