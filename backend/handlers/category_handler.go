@@ -98,7 +98,7 @@ func GetCategoriesById(w http.ResponseWriter, r *http.Request) {
 	categoryIdStr := chi.URLParam(r, "category_id")
 	categoryId, err := strconv.Atoi(categoryIdStr)
 	if err != nil {
-		http.Error(w, "Invalid category ID", 400)
+		http.Error(w, "Invalid category ID", http.StatusBadRequest)
 		return
 	}
 
