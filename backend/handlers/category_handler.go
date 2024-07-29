@@ -95,7 +95,7 @@ func GetCategoriesById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	categoryIdStr := chi.URLParam(r, "category_id")
+	categoryIdStr := chi.URLParam(r, "id")
 	categoryId, err := strconv.Atoi(categoryIdStr)
 	if err != nil {
 		http.Error(w, "Invalid category ID", http.StatusBadRequest)
@@ -192,7 +192,7 @@ func UpdateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	categoryIdStr := chi.URLParam(r, "category_id")
+	categoryIdStr := chi.URLParam(r, "id")
 	categoryId, err := strconv.Atoi(categoryIdStr)
 	if err != nil {
 		http.Error(w, "Invalid category ID", http.StatusBadRequest)
@@ -250,7 +250,7 @@ func DeleteCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	categoryIdStr := chi.URLParam(r, "category_id")
+	categoryIdStr := chi.URLParam(r, "id")
 	categoryId, err := strconv.Atoi(categoryIdStr)
 	if err != nil {
 		http.Error(w, "Invalid category ID", http.StatusBadRequest)
