@@ -1,0 +1,21 @@
+meta {
+  name: Create Tag
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{BASE_URL}}/tags
+  body: json
+  auth: none
+}
+
+headers {
+  userId: 1
+}
+
+body:json {
+  {
+    "name": "Streetwear"
+  }
+}

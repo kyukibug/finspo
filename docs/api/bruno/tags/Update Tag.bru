@@ -1,0 +1,21 @@
+meta {
+  name: Update Tag
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{BASE_URL}}/tags/3
+  body: json
+  auth: none
+}
+
+headers {
+  userId: 1
+}
+
+body:json {
+  {
+    "name": "academia"
+  }
+}
