@@ -1,0 +1,22 @@
+meta {
+  name: Create Cloth
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{BASE_URL}}/clothes
+  body: json
+  auth: none
+}
+
+headers {
+  userId: 1
+}
+
+body:json {
+  {
+    "category_id": 1,
+    "image_url": "http://example.com/clothing3.jpg"
+  }
+}

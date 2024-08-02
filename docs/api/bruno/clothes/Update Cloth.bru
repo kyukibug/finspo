@@ -1,0 +1,22 @@
+meta {
+  name: Update Cloth
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{BASE_URL}}/clothes/5
+  body: json
+  auth: none
+}
+
+headers {
+  userId: 1
+}
+
+body:json {
+  {
+    "category_id": 2,
+    "image_url": "hi"
+  }
+}
