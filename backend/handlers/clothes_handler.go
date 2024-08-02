@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/chi"
 )
 
-type Clothes struct {
+type Cloth struct {
 	Id         int       `json:"id"`
 	UserId     int       `json:"user_id"`
 	CategoryId int       `json:"category_id"`
@@ -20,7 +20,7 @@ type Clothes struct {
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
-type ClothesEdit struct {
+type ClothEdit struct {
 	CategoryId int    `json:"category_id"`
 	ImageUrl   string `json:"image_url"`
 }
@@ -56,10 +56,10 @@ func GetClothes(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	clothes := []Clothes{}
+	clothes := []Cloth{}
 
 	for rows.Next() {
-		var cloth Clothes
+		var cloth Cloth
 		if err := rows.Scan(&cloth.Id, &cloth.UserId, &cloth.CategoryId, &cloth.ImageUrl, &cloth.CreatedAt, &cloth.UpdatedAt); err != nil {
 			log.Printf("Failed to scan row: %v", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -112,7 +112,7 @@ func GetClothesById(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Release()
 
-	var cloth Clothes
+	var cloth Cloth
 	err = dbpool.QueryRow(ctx, "SELECT id, user_id, category_id, image_url, created_at, updated_at FROM clothing_items WHERE id = $1 AND user_id = $2", clothId, userId).
 		Scan(&cloth.Id, &cloth.UserId, &cloth.CategoryId, &cloth.ImageUrl, &cloth.CreatedAt, &cloth.UpdatedAt)
 	if err != nil {
@@ -144,7 +144,7 @@ func CreateClothes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req ClothesEdit
+	var req ClothEdit
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
@@ -162,7 +162,7 @@ func CreateClothes(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Release()
 
-	var newCloth Clothes
+	var newCloth Cloth
 	err = conn.QueryRow(ctx, "INSERT INTO clothing_items (user_id, category_id, image_url, created_at, updated_at) VALUES ($1, $2, $3, now(), now()) RETURNING id, user_id, category_id, image_url, created_at, updated_at",
 		userId, req.CategoryId, req.ImageUrl).Scan(&newCloth.Id, &newCloth.UserId, &newCloth.CategoryId, &newCloth.ImageUrl, &newCloth.CreatedAt, &newCloth.UpdatedAt)
 	if err != nil {
@@ -245,7 +245,7 @@ func UpdateClothes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req ClothesEdit
+	var req ClothEdit
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
@@ -263,7 +263,7 @@ func UpdateClothes(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Release()
 
-	var updatedCloth Clothes
+	var updatedCloth Cloth
 	err = conn.QueryRow(ctx,
 		"UPDATE clothing_items SET category_id = $1, image_url = $2, updated_at = now() WHERE id = $3 AND user_id = $4 RETURNING id, user_id, category_id, image_url, created_at, updated_at",
 		req.CategoryId, req.ImageUrl, clothId, userId).Scan(&updatedCloth.Id, &updatedCloth.UserId, &updatedCloth.CategoryId, &updatedCloth.ImageUrl, &updatedCloth.CreatedAt, &updatedCloth.UpdatedAt)
