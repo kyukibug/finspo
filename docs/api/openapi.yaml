@@ -102,7 +102,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ClothingItem"
-    patch:
+    put:
       security:
         - bearerAuth: []
       description: Update a clothing item by ID
@@ -238,7 +238,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Category"
-    patch:
+    put:
       security:
         - bearerAuth: []
       description: Update a category's name
@@ -377,7 +377,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Tag"
-    patch:
+    put:
       security:
         - bearerAuth: []
       description: Update a tag's name
@@ -498,7 +498,7 @@ components:
         id:
           type: integer
         name:
-          type: integer
+          type: string
         created_at:
           type: string
           format: date-time
