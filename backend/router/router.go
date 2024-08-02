@@ -21,4 +21,12 @@ func SetupRoutes(r *chi.Mux) {
 		r.Patch("/{id}", handlers.UpdateCategory)
 		r.Delete("/{id}", handlers.DeleteCategory)
 	})
+
+	r.Route("/tags", func(r chi.Router) {
+		r.Get("/", handlers.GetTags)
+		r.Get("/{id}", handlers.GetClothesById)
+		r.Post("/", handlers.CreateTag)
+		r.Patch("/{id}", handlers.UpdateTag)
+		r.Delete("/{id}", handlers.DeleteTag)
+	})
 }
