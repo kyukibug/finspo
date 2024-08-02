@@ -9,9 +9,9 @@ func SetupRoutes(r *chi.Mux) {
 	r.Route("/clothes", func(r chi.Router) {
 		r.Get("/", handlers.GetClothes)
 		r.Get("/{id}", handlers.GetClothesById)
-		// r.Post("/", handlers.CreateClothes)
-		// r.Patch("/{clothes_id}", handlers.UpdateClothes)
-		// r.Delete("/{clothes_id}", handlers.DeleteClothes)
+		r.Post("/", handlers.CreateClothes)
+		r.Patch("/{id}", handlers.UpdateClothes)
+		r.Delete("/{id}", handlers.DeleteClothes)
 	})
 
 	r.Route("/categories", func(r chi.Router) {
