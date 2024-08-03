@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/chi"
 )
 
-type Tag struct {
+type TagItem struct {
 	Id        int       `json:"id"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`
@@ -42,10 +42,10 @@ func GetTags(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	tags := []Tag{}
+	tags := []TagItem{}
 
 	for rows.Next() {
-		var tag Tag
+		var tag TagItem
 		if err := rows.Scan(&tag.Id, &tag.Name, &tag.CreatedAt, &tag.UpdatedAt); err != nil {
 			log.Printf("Failed to scan row: %v", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -87,7 +87,7 @@ func GetTagById(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Release()
 
-	var tag Tag
+	var tag TagItem
 	err = dbpool.QueryRow(ctx, "SELECT id, name, created_at, updated_at FROM tags WHERE id = $1", tagId).
 		Scan(&tag.Id, &tag.Name, &tag.CreatedAt, &tag.UpdatedAt)
 	if err != nil {
@@ -126,8 +126,12 @@ func CreateTag(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Release()
 
-	var newTag Tag
-	err = conn.QueryRow(ctx, "INSERT INTO tags (name, created_at, updated_at) VALUES ($1, now(), now()) RETURNING id, name, created_at, updated_at",
+	var newTag TagItem
+	err = conn.QueryRow(
+		ctx,
+		`INSERT INTO tags (name, created_at, updated_at)
+     	VALUES ($1, now(), now())
+     	RETURNING id, name, created_at, updated_at`,
 		req.Name).Scan(&newTag.Id, &newTag.Name, &newTag.CreatedAt, &newTag.UpdatedAt)
 	if err != nil {
 		log.Printf("Failed to insert new tag: %v", err)
@@ -172,7 +176,7 @@ func UpdateTag(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Release()
 
-	var updatedTag Tag
+	var updatedTag TagItem
 	err = conn.QueryRow(ctx,
 		"UPDATE tags SET name = $1, updated_at = now() WHERE id = $2 RETURNING id, name, created_at, updated_at",
 		req.Name, tagId).Scan(&updatedTag.Id, &updatedTag.Name, &updatedTag.CreatedAt, &updatedTag.UpdatedAt)
