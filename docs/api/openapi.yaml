@@ -46,7 +46,7 @@ paths:
             application/json:
               schema:
                 type: array
-                items:
+                items: 
                   $ref: "#/components/schemas/ClothingItem"
     post:
       security:
@@ -74,7 +74,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ClothingItem"
-
+  
   /clothes/{id}:
     get:
       security:
@@ -156,7 +156,7 @@ paths:
       responses:
         "204":
           description: No Content
-
+  
   /categories:
     get:
       security:
@@ -179,8 +179,8 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Category"
-
+                  $ref: '#/components/schemas/Category'
+    
     post:
       security:
         - bearerAuth: []
@@ -295,7 +295,7 @@ paths:
       responses:
         "204":
           description: No Content
-
+      
   /tags:
     get:
       security:
@@ -318,8 +318,8 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Tag"
-
+                  $ref: '#/components/schemas/Tag'
+    
     post:
       security:
         - bearerAuth: []
@@ -434,6 +434,7 @@ paths:
       responses:
         "204":
           description: No Content
+      
 
 components:
   securitySchemes:
@@ -477,6 +478,10 @@ components:
         updated_at:
           type: string
           format: date-time
+        tags:
+          type: array
+          items:
+            type: integer
     Category:
       type: object
       properties:
@@ -505,3 +510,4 @@ components:
         updated_at:
           type: string
           format: date-time
+    
