@@ -55,7 +55,8 @@ func GetClothes(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Release()
 
-	rows, err := conn.Query(ctx, "SELECT id, user_id, category_id, image_url, created_at, updated_at FROM clothing_items WHERE user_id = $1", userId)
+	rows, err := conn.Query(ctx, `SELECT id, user_id, category_id, image_url, created_at, updated_at
+	FROM clothing_items WHERE user_id = $1`, userId)
 	if err != nil {
 		log.Printf("Query failed: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -227,7 +228,8 @@ func CreateClothes(w http.ResponseWriter, r *http.Request) {
 	defer conn.Release()
 
 	var newCloth Cloth
-	err = conn.QueryRow(ctx, "INSERT INTO clothing_items (user_id, category_id, image_url, created_at, updated_at) VALUES ($1, $2, $3, now(), now()) RETURNING id, user_id, category_id, image_url, created_at, updated_at",
+	err = conn.QueryRow(ctx, `INSERT INTO clothing_items (user_id, category_id, image_url, created_at, updated_at)
+	VALUES ($1, $2, $3, now(), now()) RETURNING id, user_id, category_id, image_url, created_at, updated_at`,
 		userId, req.CategoryId, req.ImageUrl).Scan(&newCloth.Id, &newCloth.UserId, &newCloth.CategoryId, &newCloth.ImageUrl, &newCloth.CreatedAt, &newCloth.UpdatedAt)
 	if err != nil {
 		log.Printf("Failed to insert new clothing item: %v", err)
@@ -319,7 +321,9 @@ func UpdateClothes(w http.ResponseWriter, r *http.Request) {
 		`UPDATE clothing_items SET category_id = $1, image_url = $2,
 		updated_at = now() WHERE id = $3 AND user_id = $4
 		RETURNING id, user_id, category_id, image_url, created_at, updated_at`,
-		req.CategoryId, req.ImageUrl, clothId, userId).Scan(&updatedCloth.Id, &updatedCloth.UserId, &updatedCloth.CategoryId, &updatedCloth.ImageUrl, &updatedCloth.CreatedAt, &updatedCloth.UpdatedAt)
+		req.CategoryId, req.ImageUrl, clothId, userId).Scan(
+		&updatedCloth.Id, &updatedCloth.UserId, &updatedCloth.CategoryId, &updatedCloth.ImageUrl,
+		&updatedCloth.CreatedAt, &updatedCloth.UpdatedAt)
 	if err != nil {
 		log.Printf("Failed to update clothing item: %v", err)
 		http.Error(w, "Clothing item not found or not authorized to update", http.StatusNotFound)
