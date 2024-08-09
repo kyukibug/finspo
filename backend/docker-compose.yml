@@ -1,6 +1,4 @@
 # This is a docker-compose file for a 3-tier application consisting of a frontend, backend and database service.
-version: '3.8'
-
 services:
 
   backend:
