@@ -3,20 +3,20 @@
  <img width=200px height=200px src="https://i.imgur.com/6wj0hh6.jpg" alt="Project logo"></a>
 </p>
 
-<h3 align="center">FukuBox</h3>
+<h3 align="center">Finspo</h3>
 
 <div align="center">
 
   [![Status](https://img.shields.io/badge/status-In_Development-yellow.svg)]() 
-  [![GitHub Issues](https://img.shields.io/github/issues/kyukibug/Fukubox.svg)](https://github.com/kyukibug/Fukubox/issues)
-  [![GitHub Pull Requests](https://img.shields.io/github/issues-pr/kyukibug/Fukubox.svg)](https://github.com/kyukibug/Fukubox/pulls)
+  [![GitHub Issues](https://img.shields.io/github/issues/kyukibug/Finspo.svg)](https://github.com/kyukibug/Finspo/issues)
+  [![GitHub Pull Requests](https://img.shields.io/github/issues-pr/kyukibug/Finspo.svg)](https://github.com/kyukibug/Finspo/pulls)
   [![License](https://img.shields.io/badge/license-MPL_2.0-blue.svg)](/LICENSE)
 
 </div>
 
 ---
 
-<p align="center"> Introducing Fukubox, a web app that offers an open, creative space for managing your wardrobe. Upload, categorize, and organize photos of your clothing with ease, and enjoy the freedom to create virtual outfits and explore new styles. Fukubox provides a seamless, intuitive experience, allowing you to take full control of your fashion choices in a dynamic, sandbox environment.
+<p align="center"> Introducing Finspo, a web app that offers an open, creative space for managing your wardrobe. Upload, categorize, and organize photos of your clothing with ease, and enjoy the freedom to create virtual outfits and explore new styles. Finspo provides a seamless, intuitive experience, allowing you to take full control of your fashion choices in a dynamic, sandbox environment.
     <br> 
 </p>
 
@@ -95,7 +95,7 @@ Add additional notes about how to deploy this on a live system.
 ## ✍️ Authors <a name = "authors"></a>
 - [@kyukibug](https://github.com/kyukibug) - Idea & Development
 
-See also the list of [contributors](https://github.com/kyukibug/Fukubox/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/kyukibug/Finspo/contributors) who participated in this project.
 
 <!-- ## 🎉 Acknowledgements <a name = "acknowledgement"></a>
 <!-- - Hat tip to anyone whose code was used
