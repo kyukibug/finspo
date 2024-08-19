@@ -2,6 +2,7 @@
 services:
 
   backend:
+    container_name: fukubox_api
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -17,9 +18,8 @@ services:
       - ./:/api
 
   db:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev.db
+    container_name: fukubox_db
+    image: postgres:14.1-alpine
     restart: always
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
@@ -29,6 +29,7 @@ services:
       - '${DB_PORT}:${DB_PORT}'
     volumes:
       - db:/var/lib/postgresql/data
+      - ./psql_dump.sql:/docker-entrypoint-initdb.d/psql_dump.sql
     command: -p ${DB_PORT}
 
   pgadmin:
@@ -42,6 +43,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     volumes:
       - pgadmin-data:/var/lib/pgadmin
+      - ./servers.json:/pgadmin4/servers.json
 volumes:
   db:
     driver: local

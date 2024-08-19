@@ -1,0 +1,13 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "Fukubox",
+            "Group": "Servers",
+            "Host": "host.docker.internal",
+            "Port": 3001,
+            "MaintenanceDB": "postgres",
+            "Username": "postgres",
+            "SSLMode": "prefer"
+        }
+    }
+}
