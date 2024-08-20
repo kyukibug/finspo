@@ -2,13 +2,17 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"com.fukubox/database"
+	"com.fukubox/repository"
 	"github.com/go-chi/chi"
+	"github.com/go-playground/validator"
 )
 
 type Cloth struct {
@@ -27,91 +31,38 @@ type Tag struct {
 }
 
 type ClothEdit struct {
-	CategoryId int    `json:"category_id"`
-	ImageUrl   string `json:"image_url"`
+	CategoryId int    `json:"category_id" validate:"required,gt=0"`
+	ImageUrl   string `json:"image_url" validate:"required"`
 	TagIds     []int  `json:"tag_ids"`
 }
 
 func GetClothes(w http.ResponseWriter, r *http.Request) {
-	dbpool := database.GetDB()
 	ctx := r.Context()
 
-	userIdStr := r.Header.Get("userId")
+	userId := r.Header.Get("userId")
 
-	userId, err := strconv.Atoi(userIdStr)
+	clothesDto, err := repository.GetClothesByUser(ctx, userId)
 	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
-		return
-	}
-
-	conn, err := dbpool.Acquire(ctx)
-	if err != nil {
-		log.Printf("Failed to acquire a database connection: %v", err)
+		log.Printf("Failed to get clothes: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
 	}
-	defer conn.Release()
-
-	rows, err := conn.Query(ctx, `SELECT id, user_id, category_id, image_url, created_at, updated_at
-	FROM clothing_items WHERE user_id = $1`, userId)
-	if err != nil {
-		log.Printf("Query failed: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
 
 	clothes := []Cloth{}
-
-	for rows.Next() {
-		var cloth Cloth
-		if err := rows.Scan(&cloth.Id, &cloth.UserId, &cloth.CategoryId, &cloth.ImageUrl, &cloth.CreatedAt, &cloth.UpdatedAt); err != nil {
-			log.Printf("Failed to scan row: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
+	for _, cloth := range clothesDto {
+		newCloth := Cloth{
+			Id:         cloth.Id,
+			UserId:     cloth.UserId,
+			CategoryId: cloth.CategoryId,
+			ImageUrl:   cloth.ImageUrl,
+			CreatedAt:  cloth.CreatedAt,
+			UpdatedAt:  cloth.UpdatedAt,
 		}
-
-		tagConn, err := dbpool.Acquire(ctx)
+		err := json.Unmarshal([]byte(cloth.TagsJson), &newCloth.Tags)
 		if err != nil {
-			log.Printf("Failed to acquire a database connection for tags: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
+			log.Printf("Failed to unmarshall ClothDto.TagsJson: \n\ttagString:%v \n\tErr:%v", cloth.TagsJson, err)
 		}
 
-		tagRows, err := tagConn.Query(ctx, `SELECT t.id, t.name FROM tags t
-			JOIN clothing_item_tags cit ON t.id = cit.tag_id
-			WHERE cit.clothing_item_id = $1`, cloth.Id)
-		if err != nil {
-			tagConn.Release()
-			log.Printf("Failed to query tags: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		var tags []Tag
-		for tagRows.Next() {
-			var tag Tag
-			if err := tagRows.Scan(&tag.Id, &tag.Name); err != nil {
-				tagRows.Close()
-				tagConn.Release()
-				log.Printf("Failed to scan tag: %v", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-				return
-			}
-			tags = append(tags, tag)
-		}
-
-		tagRows.Close()
-		tagConn.Release()
-
-		cloth.Tags = tags
-		clothes = append(clothes, cloth)
-	}
-
-	if err := rows.Err(); err != nil {
-		log.Printf("Error after iterating rows: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
+		clothes = append(clothes, newCloth)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -123,62 +74,37 @@ func GetClothes(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetClothesById(w http.ResponseWriter, r *http.Request) {
-	dbpool := database.GetDB()
 	ctx := r.Context()
 
-	userIdStr := r.Header.Get("userId")
-
-	userId, err := strconv.Atoi(userIdStr)
-	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
-		return
-	}
-
+	userId := r.Header.Get("userId")
 	clothIdStr := chi.URLParam(r, "id")
-	clothId, err := strconv.Atoi(clothIdStr)
-	if err != nil {
-		http.Error(w, "Invalid clothing item ID", http.StatusBadRequest)
-		return
-	}
 
-	conn, err := dbpool.Acquire(ctx)
+	_, err := strconv.Atoi(clothIdStr)
 	if err != nil {
-		log.Printf("Failed to acquire a database connection: %v", err)
+		log.Printf("Invalid or empty clothing id: %v", clothIdStr)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	defer conn.Release()
 
-	var cloth Cloth
-	err = dbpool.QueryRow(ctx, "SELECT id, user_id, category_id, image_url, created_at, updated_at FROM clothing_items WHERE id = $1 AND user_id = $2", clothId, userId).
-		Scan(&cloth.Id, &cloth.UserId, &cloth.CategoryId, &cloth.ImageUrl, &cloth.CreatedAt, &cloth.UpdatedAt)
+	clothDto, err := repository.GetClothesByUserAndId(ctx, userId, clothIdStr)
 	if err != nil {
-		log.Printf("Failed to query row: %v", err)
-		http.Error(w, "Clothing Item not found", http.StatusNotFound)
-		return
-	}
-
-	tagRows, err := conn.Query(ctx, `SELECT t.id, t.name FROM tags t
-		JOIN clothing_item_tags cit ON t.id = cit.tag_id
-		WHERE cit.clothing_item_id = $1`, cloth.Id)
-	if err != nil {
-		log.Printf("Failed to query tags: %v", err)
+		log.Printf("Failed to get cloth by id: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
 	}
-	defer tagRows.Close()
 
-	var tags []Tag
-	for tagRows.Next() {
-		var tag Tag
-		if err := tagRows.Scan(&tag.Id, &tag.Name); err != nil {
-			log.Printf("Failed to scan tag: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		tags = append(tags, tag)
+	cloth := Cloth{
+		Id:         clothDto.Id,
+		UserId:     clothDto.UserId,
+		CategoryId: clothDto.CategoryId,
+		ImageUrl:   clothDto.ImageUrl,
+		CreatedAt:  clothDto.CreatedAt,
+		UpdatedAt:  clothDto.UpdatedAt,
 	}
-	cloth.Tags = tags
+
+	err = json.Unmarshal([]byte(clothDto.TagsJson), &cloth.Tags)
+	if err != nil {
+		log.Printf("Failed to unmarshall ClothDto.TagsJson: \n\ttagString:%v \n\tErr:%v", clothDto.TagsJson, err)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(cloth); err != nil {
@@ -189,78 +115,60 @@ func GetClothesById(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateClothes(w http.ResponseWriter, r *http.Request) {
-	dbpool := database.GetDB()
 	ctx := r.Context()
 
-	userIdStr := r.Header.Get("userId")
-
-	userId, err := strconv.Atoi(userIdStr)
-	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
-		return
-	}
+	userId := r.Header.Get("userId")
 
 	var req ClothEdit
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-	if req.CategoryId == 0 || req.ImageUrl == "" {
-		http.Error(w, "Category ID and Image URL are required", http.StatusBadRequest)
+		log.Printf("Failed to decode request as handlers.ClothEdit: %v", err)
+		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
-	conn, err := dbpool.Acquire(ctx)
+	validate := validator.New()
+
+	err := validate.Struct(req)
 	if err != nil {
-		log.Printf("Failed to acquire a database connection: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	defer conn.Release()
-
-	var newCloth Cloth
-	err = conn.QueryRow(ctx, `INSERT INTO clothing_items (user_id, category_id, image_url, created_at, updated_at)
-	VALUES ($1, $2, $3, now(), now()) RETURNING id, user_id, category_id, image_url, created_at, updated_at`,
-		userId, req.CategoryId, req.ImageUrl).Scan(&newCloth.Id, &newCloth.UserId, &newCloth.CategoryId, &newCloth.ImageUrl, &newCloth.CreatedAt, &newCloth.UpdatedAt)
-	if err != nil {
-		log.Printf("Failed to insert new clothing item: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	for _, tagId := range req.TagIds {
-		_, err := conn.Exec(ctx, "INSERT INTO clothing_item_tags (clothing_item_id, tag_id) VALUES ($1, $2)", newCloth.Id, tagId)
-		if err != nil {
-			log.Printf("Failed to insert tag association: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
+		var validationErrors strings.Builder
+		for _, err := range err.(validator.ValidationErrors) {
+			validationErrors.WriteString(fmt.Sprintf("%s is %s with type %s\n", err.StructField(), err.Tag(), err.Type()))
 		}
+
+		http.Error(w, validationErrors.String(), http.StatusBadRequest)
+		return
 	}
 
-	tagRows, err := conn.Query(ctx, `SELECT t.id, t.name FROM tags t
-		JOIN clothing_item_tags cit ON t.id = cit.tag_id
-		WHERE cit.clothing_item_id = $1`, newCloth.Id)
+	clothId, err := repository.CreateClothWithTags(ctx, userId, repository.ClothEditDto{
+		CategoryId: req.CategoryId,
+		ImageUrl:   req.ImageUrl,
+	}, req.TagIds)
+
+	clothDto, err := repository.GetClothesByUserAndId(ctx, userId, strconv.Itoa(clothId))
 	if err != nil {
-		log.Printf("Failed to query tags: %v", err)
+		log.Printf("Failed to get cloth by id %v: %v", clothId, err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	defer tagRows.Close()
 
-	var tags []Tag
-	for tagRows.Next() {
-		var tag Tag
-		if err := tagRows.Scan(&tag.Id, &tag.Name); err != nil {
-			log.Printf("Failed to scan tag: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		tags = append(tags, tag)
+	cloth := Cloth{
+		Id:         clothDto.Id,
+		UserId:     clothDto.UserId,
+		CategoryId: clothDto.CategoryId,
+		ImageUrl:   clothDto.ImageUrl,
+		CreatedAt:  clothDto.CreatedAt,
+		UpdatedAt:  clothDto.UpdatedAt,
 	}
-	newCloth.Tags = tags
+
+	err = json.Unmarshal([]byte(clothDto.TagsJson), &cloth.Tags)
+	if err != nil {
+		log.Printf("Failed to unmarshall ClothDto.TagsJson: \n\ttagString:%v \n\tErr:%v", clothDto.TagsJson, err)
+	}
+
+	// Query for new item to return
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(newCloth); err != nil {
+	if err := json.NewEncoder(w).Encode(cloth); err != nil {
 		log.Printf("Failed to encode response as JSON: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -268,16 +176,9 @@ func CreateClothes(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateClothes(w http.ResponseWriter, r *http.Request) {
-	dbpool := database.GetDB()
 	ctx := r.Context()
 
-	userIdStr := r.Header.Get("userId")
-
-	userId, err := strconv.Atoi(userIdStr)
-	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
-		return
-	}
+	userId := r.Header.Get("userId")
 
 	clothIdStr := chi.URLParam(r, "id")
 	clothId, err := strconv.Atoi(clothIdStr)
@@ -296,9 +197,8 @@ func UpdateClothes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, err := dbpool.Acquire(ctx)
-	if err != nil {
-		log.Printf("Failed to acquire a database connection: %v", err)
+	conn := database.AcquireConnection(ctx)
+	if conn == nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -365,16 +265,9 @@ func UpdateClothes(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteClothes(w http.ResponseWriter, r *http.Request) {
-	dbpool := database.GetDB()
 	ctx := r.Context()
 
-	userIdStr := r.Header.Get("userId")
-
-	userId, err := strconv.Atoi(userIdStr)
-	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
-		return
-	}
+	userId := r.Header.Get("userId")
 
 	clothIdStr := chi.URLParam(r, "id")
 	clothId, err := strconv.Atoi(clothIdStr)
@@ -383,9 +276,8 @@ func DeleteClothes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, err := dbpool.Acquire(ctx)
-	if err != nil {
-		log.Printf("Failed to acquire a database connection: %v", err)
+	conn := database.AcquireConnection(ctx)
+	if conn == nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}

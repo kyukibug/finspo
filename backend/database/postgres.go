@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -40,4 +41,14 @@ func StartDB() error {
 func CloseDB() {
 	dbpool.Close()
 	// maybe error check for this but .Close does not return an errro??
+}
+
+func AcquireConnection(ctx context.Context) *pgxpool.Conn {
+	conn, err := dbpool.Acquire(ctx)
+	if err != nil {
+		log.Printf("Failed to acquire a database connection: %v", err)
+		return nil
+	}
+
+	return conn
 }

@@ -107,3 +107,63 @@ INSERT INTO clothing_item_tags (clothing_item_id, tag_id) VALUES
 (1, 1),
 (2, 2),
 (3, 1);
+
+
+-- Functions
+
+CREATE OR REPLACE FUNCTION get_clothes_by_user(_user_id INT)
+	returns TABLE (
+    id INT, 
+    user_id INT, 
+    category_id INT, 
+    image_url VARCHAR(255), 
+    created_at TIMESTAMP, 
+    updated_at TIMESTAMP, 
+    tags text)
+	language sql
+	security definer
+as $$
+  SELECT c.id,
+    c.user_id,
+    c.category_id,
+    c.image_url,
+    c.created_at,
+    c.updated_at,
+     array_to_json(array_agg(tags)) as tags_list
+  FROM clothing_items c
+  LEFT JOIN clothing_item_tags cit
+    ON cit.clothing_item_id = c.id
+  LEFT JOIN tags
+    ON tags.id = cit.tag_id
+  WHERE c.user_id = _user_id
+  GROUP BY c.id
+$$;
+
+CREATE OR REPLACE FUNCTION get_clothes_by_user_and_id(_user_id INT, _id INT)
+	returns TABLE (
+    id INT, 
+    user_id INT, 
+    category_id INT, 
+    image_url VARCHAR(255), 
+    created_at TIMESTAMP, 
+    updated_at TIMESTAMP, 
+    tags text)
+	language sql
+	security definer
+as $$
+  SELECT c.id,
+    c.user_id,
+    c.category_id,
+    c.image_url,
+    c.created_at,
+    c.updated_at,
+     array_to_json(array_agg(tags)) as tags_list
+  FROM clothing_items c
+  LEFT JOIN clothing_item_tags cit
+    ON cit.clothing_item_id = c.id
+  LEFT JOIN tags
+    ON tags.id = cit.tag_id
+  WHERE c.user_id = _user_id
+    AND c.id = _id
+  GROUP BY c.id
+$$;
