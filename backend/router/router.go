@@ -2,10 +2,13 @@ package router
 
 import (
 	"com.fukubox/handlers"
+	"com.fukubox/middleware"
 	"github.com/go-chi/chi"
 )
 
-func SetupRoutes(r *chi.Mux) {
+func SetupAuthenticatedRoutes(r *chi.Mux) {
+	r.Use(middleware.AuthMiddleware)
+
 	r.Route("/clothes", func(r chi.Router) {
 		r.Get("/", handlers.GetClothes)
 		r.Get("/{id}", handlers.GetClothesById)

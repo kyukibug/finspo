@@ -28,10 +28,7 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	userIdStr := r.Header.Get("userId")
-	if userIdStr == "" {
-		http.Error(w, "User ID is not set", http.StatusBadRequest)
-		return
-	}
+
 	userId, err := strconv.Atoi(userIdStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
@@ -85,10 +82,7 @@ func GetCategoriesById(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	userIdStr := r.Header.Get("userId")
-	if userIdStr == "" {
-		http.Error(w, "User ID is not set", http.StatusBadRequest)
-		return
-	}
+
 	userId, err := strconv.Atoi(userIdStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
@@ -132,10 +126,7 @@ func CreateCategory(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	userIdStr := r.Header.Get("userId")
-	if userIdStr == "" {
-		http.Error(w, "User ID is not set", http.StatusBadRequest)
-		return
-	}
+
 	userId, err := strconv.Atoi(userIdStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
@@ -182,10 +173,7 @@ func UpdateCategory(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	userIdStr := r.Header.Get("userId")
-	if userIdStr == "" {
-		http.Error(w, "User ID is not set", http.StatusBadRequest)
-		return
-	}
+
 	userId, err := strconv.Atoi(userIdStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
@@ -240,10 +228,7 @@ func DeleteCategory(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	userIdStr := r.Header.Get("userId")
-	if userIdStr == "" {
-		http.Error(w, "User ID is not set", http.StatusBadRequest)
-		return
-	}
+
 	userId, err := strconv.Atoi(userIdStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)

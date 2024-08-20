@@ -42,7 +42,7 @@ func SetupAndRunApp() error {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	router.SetupRoutes(r)
+	router.SetupAuthenticatedRoutes(r)
 
 	// get the port and start
 	port := os.Getenv("PORT")

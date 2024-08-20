@@ -37,10 +37,7 @@ func GetClothes(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	userIdStr := r.Header.Get("userId")
-	if userIdStr == "" {
-		http.Error(w, "User ID is not set", http.StatusBadRequest)
-		return
-	}
+
 	userId, err := strconv.Atoi(userIdStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
@@ -130,10 +127,7 @@ func GetClothesById(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	userIdStr := r.Header.Get("userId")
-	if userIdStr == "" {
-		http.Error(w, "User ID is not set", http.StatusBadRequest)
-		return
-	}
+
 	userId, err := strconv.Atoi(userIdStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
@@ -199,10 +193,7 @@ func CreateClothes(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	userIdStr := r.Header.Get("userId")
-	if userIdStr == "" {
-		http.Error(w, "User ID is not set", http.StatusBadRequest)
-		return
-	}
+
 	userId, err := strconv.Atoi(userIdStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
@@ -281,10 +272,7 @@ func UpdateClothes(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	userIdStr := r.Header.Get("userId")
-	if userIdStr == "" {
-		http.Error(w, "User ID is not set", http.StatusBadRequest)
-		return
-	}
+
 	userId, err := strconv.Atoi(userIdStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
@@ -381,10 +369,7 @@ func DeleteClothes(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	userIdStr := r.Header.Get("userId")
-	if userIdStr == "" {
-		http.Error(w, "User ID is not set", http.StatusBadRequest)
-		return
-	}
+
 	userId, err := strconv.Atoi(userIdStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
