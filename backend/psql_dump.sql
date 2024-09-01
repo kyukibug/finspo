@@ -167,3 +167,26 @@ as $$
     AND c.id = _id
   GROUP BY c.id
 $$;
+
+CREATE OR REPLACE FUNCTION get_tags_by_user(_user_id INT) 
+  RETURNS TABLE (
+    id INT,
+    name VARCHAR(255),
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+  )
+	language sql
+	security definer
+  as $$
+    SELECT t.id,
+      t.name,
+      t.created_at,
+      t.updated_at
+    FROM tags t
+    LEFT JOIN clothing_item_tags cit
+      ON cit.tag_id = t.id
+    LEFT JOIN clothing_items c
+      ON c.id = cit.clothing_item_id
+    WHERE c.user_id = _user_id
+    GROUP BY t.id
+  $$;
