@@ -1,0 +1,77 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table users {
+  id int [pk, increment]
+  username varchar
+  email varchar
+  google_id varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table tags {
+  id int [pk, increment]
+  user_id int
+  name varchar
+  created_at timestamp 
+  updated_at timestamp
+}
+
+Table clothing_items {
+  id int [pk, increment]
+  user_id int
+  category_id int
+  image_url varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table categories {
+  id int [pk, increment]
+  user_id int
+  name varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table sandbox {
+  id int [pk, increment]
+  user_id int
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table sandbox_positions {
+  id int [pk, increment]
+  sandbox_id int
+  clothing_item_id int
+  position_x float
+  position_y float
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table clothing_item_tags {
+  clothing_item_id int
+  tag_id int
+
+  indexes {
+    (clothing_item_id, tag_id) [pk]
+  }
+}
+
+Ref: categories.user_id > users.id
+
+Ref: clothing_items.user_id > users.id
+Ref: clothing_items.category_id > categories.id
+
+Ref: clothing_item_tags.clothing_item_id > clothing_items.id
+Ref: clothing_item_tags.tag_id > tags.id
+
+Ref: sandbox.user_id > users.id
+
+Ref: sandbox_positions.sandbox_id > sandbox.id
+
+Ref: tags.user_id > users.id
+
