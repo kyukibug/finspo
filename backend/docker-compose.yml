@@ -19,7 +19,7 @@ services:
 
   db:
     container_name: fukubox_db
-    image: postgres:14.1-alpine
+    image: postgres:16.4-alpine
     restart: always
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
