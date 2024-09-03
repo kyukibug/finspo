@@ -272,34 +272,17 @@ func DeleteClothes(w http.ResponseWriter, r *http.Request) {
 	clothIdStr := chi.URLParam(r, "id")
 	clothId, err := strconv.Atoi(clothIdStr)
 	if err != nil {
-		http.Error(w, "Invalid clothing item ID", http.StatusBadRequest)
-		return
-	}
-
-	conn := database.AcquireConnection(ctx)
-	if conn == nil {
+		log.Printf("Invalid or empty clothing id: %v", clothIdStr)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	defer conn.Release()
 
-	_, err = conn.Exec(ctx, "DELETE FROM clothing_item_tags WHERE clothing_item_id = $1", clothId)
+	err = repository.DeleteClothWithTags(ctx, userId, clothId)
 	if err != nil {
-		log.Printf("Failed to delete associated tags: %v", err)
+		log.Printf("Failed to delete clothing item %v for user %v: %v", clothId, userId, err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	commandTag, err := conn.Exec(ctx, "DELETE FROM clothing_items WHERE id = $1 AND user_id = $2", clothId, userId)
-	if err != nil {
-		log.Printf("Failed to delete clothing item: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	if commandTag.RowsAffected() == 0 {
-		http.Error(w, "Clothing item not found or not authorized to delete", http.StatusNotFound)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusOK)
 }

@@ -145,7 +145,7 @@ func CreateClothWithTags(ctx context.Context, userId string, newCloth ClothEditD
 		return -1, err
 	}
 
-	err = BindTagsTx(tx, ctx, id, tags)
+	err = UpsertTagsTx(tx, ctx, id, tags)
 	if err != nil {
 		log.Printf("Failed to bind cloth tags: %v", err)
 		return -1, err
@@ -154,19 +154,67 @@ func CreateClothWithTags(ctx context.Context, userId string, newCloth ClothEditD
 	return id, nil
 }
 
-func UpdateCloth(ctx context.Context) (int, error) {
+func UpdateCloth(ctx context.Context, userId string, clothId int, updatedCloth ClothEditDto) error {
 	conn := database.AcquireConnection(ctx)
 	if conn == nil {
-		return -1, errors.New("failed to acquire database connection")
+		return errors.New("failed to acquire database connection")
 	}
 	defer conn.Release()
 
-	return 1, nil
+	err := conn.QueryRow(ctx,
+		`UPDATE clothing_items SET category_id = $1, image_url = $2,
+		updated_at = now() WHERE id = $3 AND user_id = $4
+		RETURNING id`,
+		updatedCloth.CategoryId, updatedCloth.ImageUrl, clothId, userId).Scan(
+		&clothId)
+
+	if err != nil {
+		log.Printf("Failed to update clothing item: %v", err)
+		return err
+	}
+
+	return nil
 }
 
-func BindTagsTx(tx pgx.Tx, ctx context.Context, clothId int, tags []int) error {
+func DeleteCloth(ctx context.Context, userId string, clothId int) error {
+	conn := database.AcquireConnection(ctx)
+	if conn == nil {
+		return errors.New("failed to acquire database connection")
+	}
+	defer conn.Release()
 
-	query := `INSERT INTO clothing_item_tags (clothing_item_id, tag_id) VALUES ($1, $2)`
+	commandTag, err := conn.Exec(ctx, "DELETE FROM clothing_items WHERE id = $1 AND user_id = $2", clothId, userId)
+	if err != nil {
+		log.Printf("Failed to delete clothing item: %v", err)
+		return err
+	}
+	if commandTag.RowsAffected() == 0 {
+		log.Printf("Clothing item %v not found or not authorized to delete for user %v", clothId, userId)
+		return errors.New("Clothing item not found for user")
+	}
+
+	return nil
+}
+
+func DeleteClothWithTags(ctx context.Context, userId string, clothId int) error {
+	conn := database.AcquireConnection(ctx)
+	if conn == nil {
+		return errors.New("failed to acquire database connection")
+	}
+	defer conn.Release()
+
+	_, err := conn.Exec(ctx, "DELETE FROM clothing_item_tags WHERE clothing_item_id = $1", clothId)
+	if err != nil {
+		log.Printf("Failed to delete associated tags for cloth %v: %v", clothId, err)
+		return err
+	}
+
+	return DeleteCloth(ctx, userId, clothId)
+}
+
+func UpsertTagsTx(tx pgx.Tx, ctx context.Context, clothId int, tags []int) error {
+
+	query := `call upsert_cloth_tags($1, $2)`
 
 	batch := &pgx.Batch{}
 
