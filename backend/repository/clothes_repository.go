@@ -60,7 +60,7 @@ func GetClothesByUser(ctx context.Context, userId string) ([]ClothDto, error) {
 	return clothes, nil
 }
 
-func GetClothesByUserAndId(ctx context.Context, userId string, clothId string) (ClothDto, error) {
+func GetClothesByUserAndId(ctx context.Context, userId string, clothId int) (ClothDto, error) {
 	conn := database.AcquireConnection(ctx)
 	if conn == nil {
 		return ClothDto{}, errors.New("failed to acquire database connection")
@@ -145,7 +145,7 @@ func CreateClothWithTags(ctx context.Context, userId string, newCloth ClothEditD
 		return -1, err
 	}
 
-	err = UpsertTagsTx(tx, ctx, id, tags)
+	err = AddTagsToClothTx(tx, ctx, id, tags)
 	if err != nil {
 		log.Printf("Failed to bind cloth tags: %v", err)
 		return -1, err
@@ -161,12 +161,10 @@ func UpdateCloth(ctx context.Context, userId string, clothId int, updatedCloth C
 	}
 	defer conn.Release()
 
-	err := conn.QueryRow(ctx,
+	_, err := conn.Exec(ctx,
 		`UPDATE clothing_items SET category_id = $1, image_url = $2,
-		updated_at = now() WHERE id = $3 AND user_id = $4
-		RETURNING id`,
-		updatedCloth.CategoryId, updatedCloth.ImageUrl, clothId, userId).Scan(
-		&clothId)
+		updated_at = now() WHERE id = $3 AND user_id = $4`,
+		updatedCloth.CategoryId, updatedCloth.ImageUrl, clothId, userId)
 
 	if err != nil {
 		log.Printf("Failed to update clothing item: %v", err)
@@ -212,9 +210,9 @@ func DeleteClothWithTags(ctx context.Context, userId string, clothId int) error 
 	return DeleteCloth(ctx, userId, clothId)
 }
 
-func UpsertTagsTx(tx pgx.Tx, ctx context.Context, clothId int, tags []int) error {
+func AddTagsToClothTx(tx pgx.Tx, ctx context.Context, clothId int, tags []int) error {
 
-	query := `call upsert_cloth_tags($1, $2)`
+	query := `INSERT INTO clothing_item_tags (clothing_item_id, tag_id) VALUES ($1, $2)`
 
 	batch := &pgx.Batch{}
 
@@ -231,6 +229,42 @@ func UpsertTagsTx(tx pgx.Tx, ctx context.Context, clothId int, tags []int) error
 			log.Printf("Failed to insert tag %v: %v", tagId, err)
 			return err
 		}
+	}
+
+	return nil
+}
+
+func AddTagToCloth(ctx context.Context, clothId int, tagId int) error {
+	conn := database.AcquireConnection(ctx)
+	if conn == nil {
+		return errors.New("failed to acquire database connection")
+	}
+	defer conn.Release()
+
+	query := `INSERT INTO clothing_item_tags (clothing_item_id, tag_id) VALUES ($1, $2)`
+
+	_, err := conn.Exec(ctx, query, clothId, tagId)
+	if err != nil {
+		log.Printf("Failed to add tag %v to clothing item %v: %v", tagId, clothId, err)
+		return err
+	}
+
+	return nil
+}
+
+func DeleteTagFromCloth(ctx context.Context, clothId int, tagId int) error {
+	conn := database.AcquireConnection(ctx)
+	if conn == nil {
+		return errors.New("failed to acquire database connection")
+	}
+	defer conn.Release()
+
+	query := `DELETE FROM clothing_item_tags WHERE clothing_item_id = $1 AND tag_id = $2`
+
+	_, err := conn.Exec(ctx, query, clothId, tagId)
+	if err != nil {
+		log.Printf("Failed to add tag %v to clothing item %v: %v", tagId, clothId, err)
+		return err
 	}
 
 	return nil

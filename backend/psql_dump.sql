@@ -167,17 +167,3 @@ as $$
     AND c.id = _id
   GROUP BY c.id
 $$;
-
-
-CREATE OR REPLACE PROCEDURE upsert_cloth_tags(_cloth_id INT, _tag_id INT)
-	language sql
-	security definer
-as $$
-  MERGE INTO clothing_item_tags cit
-  USING (VALUES(_cloth_id, _tag_id)) v
-  ON cit.clothing_item_id = v.column1
-    AND cit.tag_id = v.column2
-  WHEN NOT MATCHED
-    INSERT (clothing_item_id, tag_id)
-    VALUES (_cloth_id, _tag_id)
-$$;

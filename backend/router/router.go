@@ -15,6 +15,9 @@ func SetupAuthenticatedRoutes(r *chi.Mux) {
 		r.Post("/", handlers.CreateClothes)
 		r.Patch("/{id}", handlers.UpdateClothes)
 		r.Delete("/{id}", handlers.DeleteClothes)
+
+		r.Post("/{id}/tag/{tagId}", handlers.AddTagToCloth)
+		r.Delete("/{id}/tag/{tagId}", handlers.DeleteTagFromCloth)
 	})
 
 	r.Route("/categories", func(r chi.Router) {

@@ -59,7 +59,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ClothingItemInput"
+              $ref: "#/components/schemas/CreateClothingItemRequest"
       parameters:
         - in: header
           name: userId
@@ -113,7 +113,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ClothingItemInput"
+              $ref: "#/components/schemas/UpdateClothingItemRequest"
       parameters:
         - in: header
           name: userId
@@ -156,7 +156,67 @@ paths:
       responses:
         "204":
           description: No Content
-  
+  /clothes/{id}/tag/{tagId}:
+    post:
+      security:
+        - bearerAuth: []
+      description: Add tag to cloth
+      tags:
+        - Clothes
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: The ID of the clothing item
+        - in: path
+          name: tagId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the tag
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+    delete:
+      security:
+        - bearerAuth: []
+      description: Delete tag on cloth
+      tags:
+        - Clothes
+      parameters:
+        - in: header
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the user performing the request
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: The ID of the clothing item
+        - in: path
+          name: tagId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the tag
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
   /categories:
     get:
       security:
@@ -443,7 +503,7 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
-    ClothingItemInput:
+    CreateClothingItemRequest:
       type: object
       required:
         - url
@@ -460,6 +520,18 @@ components:
           items:
             type: integer
           description: Optional array of tag IDs associated with the clothing item
+    UpdateClothingItemRequest:
+      type: object
+      required:
+        - url
+        - categoryId
+      properties:
+        url:
+          type: string
+          description: URL of the clothing item image
+        categoryId:
+          type: integer
+          description: Category ID associated with the clothing item
     ClothingItem:
       type: object
       properties:

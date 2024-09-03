@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"com.fukubox/database"
 	"com.fukubox/repository"
 	"github.com/go-chi/chi"
 	"github.com/go-playground/validator"
@@ -45,6 +44,7 @@ func GetClothes(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Failed to get clothes: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
 	clothes := []Cloth{}
@@ -79,17 +79,18 @@ func GetClothesById(w http.ResponseWriter, r *http.Request) {
 	userId := r.Header.Get("userId")
 	clothIdStr := chi.URLParam(r, "id")
 
-	_, err := strconv.Atoi(clothIdStr)
+	clothId, err := strconv.Atoi(clothIdStr)
 	if err != nil {
 		log.Printf("Invalid or empty clothing id: %v", clothIdStr)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	clothDto, err := repository.GetClothesByUserAndId(ctx, userId, clothIdStr)
+	clothDto, err := repository.GetClothesByUserAndId(ctx, userId, clothId)
 	if err != nil {
 		log.Printf("Failed to get cloth by id: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
 	cloth := Cloth{
@@ -144,7 +145,7 @@ func CreateClothes(w http.ResponseWriter, r *http.Request) {
 		ImageUrl:   req.ImageUrl,
 	}, req.TagIds)
 
-	clothDto, err := repository.GetClothesByUserAndId(ctx, userId, strconv.Itoa(clothId))
+	clothDto, err := repository.GetClothesByUserAndId(ctx, userId, clothId)
 	if err != nil {
 		log.Printf("Failed to get cloth by id %v: %v", clothId, err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -164,8 +165,6 @@ func CreateClothes(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Failed to unmarshall ClothDto.TagsJson: \n\ttagString:%v \n\tErr:%v", clothDto.TagsJson, err)
 	}
-
-	// Query for new item to return
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(cloth); err != nil {
@@ -192,72 +191,48 @@ func UpdateClothes(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	if req.CategoryId == 0 || req.ImageUrl == "" {
-		http.Error(w, "Category ID and Image URL are required", http.StatusBadRequest)
-		return
-	}
 
-	conn := database.AcquireConnection(ctx)
-	if conn == nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	defer conn.Release()
+	validate := validator.New()
 
-	var updatedCloth Cloth
-	err = conn.QueryRow(ctx,
-		`UPDATE clothing_items SET category_id = $1, image_url = $2,
-		updated_at = now() WHERE id = $3 AND user_id = $4
-		RETURNING id, user_id, category_id, image_url, created_at, updated_at`,
-		req.CategoryId, req.ImageUrl, clothId, userId).Scan(
-		&updatedCloth.Id, &updatedCloth.UserId, &updatedCloth.CategoryId, &updatedCloth.ImageUrl,
-		&updatedCloth.CreatedAt, &updatedCloth.UpdatedAt)
+	err = validate.Struct(req)
 	if err != nil {
-		log.Printf("Failed to update clothing item: %v", err)
-		http.Error(w, "Clothing item not found or not authorized to update", http.StatusNotFound)
-		return
-	}
-
-	_, err = conn.Exec(ctx, "DELETE FROM clothing_item_tags WHERE clothing_item_id = $1", clothId)
-	if err != nil {
-		log.Printf("Failed to delete existing tags: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	for _, tagId := range req.TagIds {
-		_, err := conn.Exec(ctx, "INSERT INTO clothing_item_tags (clothing_item_id, tag_id) VALUES ($1, $2)", clothId, tagId)
-		if err != nil {
-			log.Printf("Failed to insert new tag associations: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
+		var validationErrors strings.Builder
+		for _, err := range err.(validator.ValidationErrors) {
+			validationErrors.WriteString(fmt.Sprintf("%s is %s with type %s\n", err.StructField(), err.Tag(), err.Type()))
 		}
+
+		http.Error(w, validationErrors.String(), http.StatusBadRequest)
+		return
 	}
 
-	tagRows, err := conn.Query(ctx, `SELECT t.id, t.name FROM tags t
-		JOIN clothing_item_tags cit ON t.id = cit.tag_id
-		WHERE cit.clothing_item_id = $1`, clothId)
+	repository.UpdateCloth(ctx, userId, clothId, repository.ClothEditDto{
+		CategoryId: req.CategoryId,
+		ImageUrl:   req.ImageUrl,
+	})
+
+	clothDto, err := repository.GetClothesByUserAndId(ctx, userId, clothId)
 	if err != nil {
-		log.Printf("Failed to query tags: %v", err)
+		log.Printf("Failed to get cloth by id %v: %v", clothId, err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	defer tagRows.Close()
 
-	var tags []Tag
-	for tagRows.Next() {
-		var tag Tag
-		if err := tagRows.Scan(&tag.Id, &tag.Name); err != nil {
-			log.Printf("Failed to scan tag: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		tags = append(tags, tag)
+	cloth := Cloth{
+		Id:         clothDto.Id,
+		UserId:     clothDto.UserId,
+		CategoryId: clothDto.CategoryId,
+		ImageUrl:   clothDto.ImageUrl,
+		CreatedAt:  clothDto.CreatedAt,
+		UpdatedAt:  clothDto.UpdatedAt,
 	}
-	updatedCloth.Tags = tags
+
+	err = json.Unmarshal([]byte(clothDto.TagsJson), &cloth.Tags)
+	if err != nil {
+		log.Printf("Failed to unmarshall ClothDto.TagsJson: \n\ttagString:%v \n\tErr:%v", clothDto.TagsJson, err)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(updatedCloth); err != nil {
+	if err := json.NewEncoder(w).Encode(cloth); err != nil {
 		log.Printf("Failed to encode response as JSON: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -280,6 +255,98 @@ func DeleteClothes(w http.ResponseWriter, r *http.Request) {
 	err = repository.DeleteClothWithTags(ctx, userId, clothId)
 	if err != nil {
 		log.Printf("Failed to delete clothing item %v for user %v: %v", clothId, userId, err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func AddTagToCloth(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	userId := r.Header.Get("userId")
+	clothIdStr := chi.URLParam(r, "id")
+	tagIdStr := chi.URLParam(r, "tagId")
+
+	clothId, err := strconv.Atoi(clothIdStr)
+	if err != nil {
+		log.Printf("Invalid or empty clothing id: %v", clothIdStr)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	tagId, err := strconv.Atoi(tagIdStr)
+	if err != nil {
+		log.Printf("Invalid or empty tag id: %v", tagIdStr)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Ensure clothing item belongs to user
+	result, err := repository.GetClothesByUserAndId(ctx, userId, clothId)
+	if err != nil {
+		log.Printf("Failed to get cloth by id: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if result.Id == 0 {
+		// failed to find item
+		log.Printf("Cloth item %v not found for user %v", clothId, userId)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	err = repository.AddTagToCloth(ctx, clothId, tagId)
+	if err != nil {
+		log.Printf("Failed to get cloth by id: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func DeleteTagFromCloth(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	userId := r.Header.Get("userId")
+	clothIdStr := chi.URLParam(r, "id")
+	tagIdStr := chi.URLParam(r, "tagId")
+
+	clothId, err := strconv.Atoi(clothIdStr)
+	if err != nil {
+		log.Printf("Invalid or empty clothing id: %v", clothIdStr)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	tagId, err := strconv.Atoi(tagIdStr)
+	if err != nil {
+		log.Printf("Invalid or empty tag id: %v", tagIdStr)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Ensure clothing item belongs to user
+	result, err := repository.GetClothesByUserAndId(ctx, userId, clothId)
+	if err != nil {
+		log.Printf("Failed to get cloth by id: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if result.Id == 0 {
+		// failed to find item
+		log.Printf("Cloth item %v not found for user %v", clothId, userId)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	err = repository.DeleteTagFromCloth(ctx, clothId, tagId)
+	if err != nil {
+		log.Printf("Failed to get cloth by id: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
