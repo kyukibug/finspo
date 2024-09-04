@@ -22,21 +22,28 @@
 
 ## 📝 Table of Contents
 - [About](#about)
-- [Getting Started](#getting_started)
-- [Deployment](#deployment)
-- [Usage](#usage)
+- [Current Status](#current_status)
+<!-- - [Getting Started](#getting_started) -->
+<!-- - [Deployment](#deployment) -->
+<!-- - [Usage](#usage) -->
 - [Built Using](#built_using)
-- [TODO](../TODO.md)
-- [Contributing](../CONTRIBUTING.md)
+<!-- - [TODO](../TODO.md) -->
+<!-- - [Contributing](../CONTRIBUTING.md) -->
 - [Authors](#authors)
-- [Acknowledgments](#acknowledgement)
+<!-- - [Acknowledgments](#acknowledgement) -->
 
 ## 👚 About <a name = "about"></a>
 It's easy to forget what you already own, leading to buying similar items. This app helps by providing a clear, visual overview of your entire wardrobe, making it easier to make thoughtful decisions about new clothes.
 
 Organizing and exploring your wardrobe in real life can be challenging. This app offers a virtual space where you can easily upload, categorize, and experiment with your clothing. This freedom to mix and match outfits enhances your ability to fully explore your style, making wardrobe management more efficient and enjoyable.
 
-<!-- ## 🏁 Getting Started <a name = "getting_started"></a>
+## 🚧🚦🔶 Current Status <a name= "current_status"></a>
+Currently finishing up the backend API routes and adding authentication shortly.
+
+After that, onto the frontend!
+
+<!-- 
+## 🏁 Getting Started <a name = "getting_started"></a>
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See [deployment](#deployment) for notes on how to deploy the project on a live system.
 
 ### Prerequisites
@@ -84,16 +91,17 @@ Give an example
 Add notes about how to use the system.
 
 ## 🚀 Deployment <a name = "deployment"></a>
-Add additional notes about how to deploy this on a live system.
+Add additional notes about how to deploy this on a live system. -->
 
 ## ⛏️ Built Using <a name = "built_using"></a>
-- [MongoDB](https://www.mongodb.com/) - Database
-- [Express](https://expressjs.com/) - Server Framework
-- [VueJs](https://vuejs.org/) - Web Framework
-- [NodeJs](https://nodejs.org/en/) - Server Environment -->
+- [React](https://vuejs.org/) - Web Framework
+- [Go](https://go.dev/) - Server Environment
+- [Go-Chi](https://go-chi.io/) - Server Framework
+- [PostgreSQL](https://www.postgresql.org/) - Database
 
 ## ✍️ Authors <a name = "authors"></a>
 - [@kyukibug](https://github.com/kyukibug) - Idea & Development
+- [@oahmed-OS](https://github.com/oahmed-OS) - Development
 
 See also the list of [contributors](https://github.com/kyukibug/Finspo/contributors) who participated in this project.
 
